@@ -1,98 +1,328 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Wood Products CMS — Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Project Overview
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+This repository contains the NestJS REST API for the Wood Products CMS technical assessment. It provides public website content, administrator authentication, protected CMS operations, PostgreSQL persistence, and image storage integration for the separate Next.js frontend.
 
-## Description
+## Features
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- JWT administrator authentication with access and refresh tokens
+- Short-lived access tokens and persisted refresh sessions
+- Argon2 administrator password hashing
+- Protected administration endpoints
+- Homepage settings and section content management
+- Banner creation, editing, deletion, and ordering
+- Service creation, editing, deletion, and ordering
+- Product and wood-type/material content management
+- Product feature management and ordering
+- Product image upload, metadata management, primary-image selection, and ordering
+- Price-list management and ordering
+- Public contact-message submission and administrator message management
+- Public endpoints for homepage, service, product, and price-list content
+- Supabase Storage image and video uploads
+- Swagger/OpenAPI documentation with bearer authentication support
+- Global DTO validation and request transformation
+- PostgreSQL persistence through Prisma ORM
+- Versioned Prisma migrations and repeatable administrator seeding
+- Database health endpoint
 
-## Project setup
+## Technology Stack
 
-```bash
-$ npm install
+- NestJS 11
+- TypeScript 5
+- Node.js and npm
+- PostgreSQL
+- Prisma ORM and Prisma Client 7
+- Swagger/OpenAPI through `@nestjs/swagger` 11
+- Argon2
+- JWT and Passport
+- `class-validator` and `class-transformer`
+- Supabase Storage
+- Railway application hosting and Railway PostgreSQL
+
+## Architecture
+
+Application requests follow this path:
+
+```text
+Next.js frontend
+       │
+       ▼
+NestJS REST API
+       │
+       ▼
+Prisma ORM
+       │
+       ▼
+Railway PostgreSQL
 ```
 
-## Compile and run the project
+Image and video uploads follow this path:
 
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```text
+Next.js frontend
+       │
+       ▼
+NestJS backend
+       │
+       ▼
+Supabase Storage
 ```
 
-## Run tests
+The backend stores public media URLs and related content metadata in PostgreSQL while the files themselves are stored in Supabase Storage.
+
+## Repository Structure
+
+```text
+src/
+├── auth/                Administrator login, tokens, guards, and JWT strategy
+├── homepage/            Homepage settings and editable content sections
+├── banners/             Banner administration
+├── services/            Service administration
+├── products/            Products, features, and product images
+├── price-lists/         Price-list administration
+├── contact-messages/    Public submissions and administrator message handling
+├── media/               Supabase Storage uploads
+├── public-content/      Aggregated public content endpoints
+└── prisma/              PrismaModule and PrismaService
+prisma/
+├── migrations/          Versioned PostgreSQL migration history
+├── schema.prisma        Database schema
+└── seed.ts              Repeatable administrator seed
+test/                    End-to-end tests
+```
+
+Prisma CLI configuration is defined in `prisma.config.ts`. Prisma Client is generated into `src/generated/prisma` during installation and is not committed.
+
+## Prerequisites
+
+- A supported Node.js installation
+- npm
+- PostgreSQL for local development
+- A Supabase project with a public storage bucket
+
+## Installation
 
 ```bash
-# unit tests
-$ npm run test
+npm install
+```
 
-# e2e tests
-$ npm run test:e2e
+The `postinstall` script automatically generates Prisma Client.
 
-# test coverage
-$ npm run test:cov
+## Environment Variables
+
+Copy `.env.example` to `.env` and replace every placeholder with a local or deployment-specific value. Never commit `.env`.
+
+| Variable | Purpose | Secret |
+| --- | --- | --- |
+| `NODE_ENV` | Runtime environment, such as `development` or `production` | No |
+| `PORT` | HTTP server port; the application falls back to `4000` | No |
+| `FRONTEND_URL` | Allowed frontend origin for CORS | No |
+| `DATABASE_URL` | PostgreSQL connection URL used by Prisma | Yes |
+| `SEED_ADMIN_EMAIL` | Email address for the seeded administrator | Treat as private configuration |
+| `SEED_ADMIN_PASSWORD` | Initial administrator password used only by the seed | Yes |
+| `SEED_ADMIN_FULL_NAME` | Display name for the seeded administrator | Treat as private configuration |
+| `JWT_ACCESS_SECRET` | Signing secret for access tokens | Yes |
+| `JWT_REFRESH_SECRET` | Signing secret for refresh tokens | Yes |
+| `JWT_ACCESS_EXPIRES_IN` | Access-token lifetime | No |
+| `JWT_REFRESH_EXPIRES_IN` | Refresh-token lifetime | No |
+| `SUPABASE_URL` | Supabase project URL | No |
+| `SUPABASE_SECRET_KEY` | Server-side Supabase key used for storage operations | Yes |
+| `SUPABASE_STORAGE_BUCKET` | Supabase bucket name | No |
+
+Keep `DATABASE_URL`, both JWT secrets, `SEED_ADMIN_PASSWORD`, and `SUPABASE_SECRET_KEY` in secure environment-variable storage in production.
+
+## Database Setup
+
+1. Create an empty local PostgreSQL database.
+2. Set `DATABASE_URL` in `.env` to the local database connection URL.
+3. Generate Prisma Client:
+
+   ```bash
+   npm run prisma:generate
+   ```
+
+4. Apply the existing migrations:
+
+   ```bash
+   npm run prisma:migrate:deploy
+   ```
+
+5. Set the `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, and `SEED_ADMIN_FULL_NAME` values, then seed the administrator:
+
+   ```bash
+   npm run prisma:seed
+   ```
+
+## Prisma Migrations
+
+The existing migration history is stored in `prisma/migrations`, including the initial schema migration.
+
+When intentionally changing the schema during development, create and apply a reviewed migration with:
+
+```bash
+npx prisma migrate dev --name <migration-name>
+```
+
+Apply committed migrations in production with:
+
+```bash
+npm run prisma:migrate:deploy
+```
+
+Do not use `prisma db push` for production deployment. Production databases should be updated from reviewed, committed migrations.
+
+## Database Seeding
+
+The seed creates or updates the administrator account and inserts the initial
+homepage settings and section content required by the public website.
+
+It reads `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, and
+`SEED_ADMIN_FULL_NAME` from the environment. The administrator password is
+hashed with Argon2 before persistence, and Prisma `upsert` operations make the
+seed safe to run repeatedly.
+
+Run the seed only after configuring the administrator environment variables:
+
+```bash
+npm run prisma:seed
+```
+
+Reviewer credentials are provided separately and must never be committed publicly.
+
+## Running Locally
+
+Start the API with automatic reload:
+
+```bash
+npm run start:dev
+```
+
+Local URLs:
+
+- API base: <http://localhost:4000/api/v1>
+- Swagger documentation: <http://localhost:4000/api/docs>
+
+Build and run the compiled application with:
+
+```bash
+npm run build
+npm run start:prod
+```
+
+## Swagger Documentation
+
+Production Swagger documentation is available at:
+
+<https://wood-cms-backend-production.up.railway.app/api/docs>
+
+Authenticate through Swagger by calling the login endpoint, copying the returned access token, selecting **Authorize**, and entering the bearer token. Do not include reviewer or production credentials in API documentation or source control.
+
+## Authentication
+
+Authentication endpoints are grouped under `/api/v1/auth`:
+
+- `POST /login` validates administrator credentials and returns an access token.
+- `POST /refresh` uses the refresh-token cookie to rotate/renew authentication.
+- `GET /me` returns the currently authenticated administrator.
+- `POST /logout` invalidates the refresh session and clears authentication state.
+
+The access token authorizes protected administrator endpoints. Refresh tokens are handled through a cookie, while refresh-session state is persisted in PostgreSQL. Administrator routes use the JWT guard and are not public.
+
+## API Structure
+
+All API routes use the `/api/v1` prefix.
+
+| Group | Route prefix | Responsibility |
+| --- | --- | --- |
+| Health | `/` and `/health/database` | API and PostgreSQL health checks |
+| Authentication | `/auth` | Login, refresh, logout, and current administrator |
+| Public content | `/public` | Homepage, services, products, and price lists |
+| Public homepage | `/homepage` | Public settings, sections, and contact-form content |
+| Contact submission | `/contact-messages` | Public contact-message creation |
+| Homepage administration | `/admin/homepage` | Settings and editable homepage sections |
+| Banners | `/admin/banners` | Banner CRUD and ordering |
+| Services | `/admin/services` | Service CRUD and ordering |
+| Products | `/admin/products` | Product CRUD, ordering, features, and images |
+| Price lists | `/admin/price-lists` | Price-list CRUD and ordering |
+| Contact administration | `/admin/contact-messages` | Message listing, detail, and status updates |
+| Media | `/admin/media` | Image and video uploads |
+
+The Swagger UI is the authoritative interactive reference for request DTOs, response shapes, and individual operations.
+
+## Image Storage
+
+The backend uploads production image and video files to the configured Supabase Storage bucket. PostgreSQL stores the resulting public URLs and the CMS metadata used for banners, products, homepage content, and other records. Supabase credentials remain server-side and must not be exposed to the frontend.
+
+## Testing
+
+```bash
+# Unit tests
+npm test
+
+# End-to-end tests
+npm run test:e2e
+
+# ESLint
+npm run lint
+
+# Production build and TypeScript compilation
+npm run build
 ```
 
 ## Deployment
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+- Backend hosting: Railway
+- Database hosting: Railway PostgreSQL
+- Image storage: Supabase Storage
+- Production migration command: `npm run prisma:migrate:deploy`
+- Production start command: `npm run start:prod`
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Railway must provide all required environment variables before installation and startup. The server reads `PORT`, falls back to `4000` locally, and listens on `0.0.0.0`.
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+Deployed backend base URL:
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+<https://wood-cms-backend-production.up.railway.app>
 
-## Resources
+## AI Tools Used
 
-Check out a few resources that may come in handy when working with NestJS:
+ChatGPT and Codex were used to assist with requirements analysis, architecture planning, database design, implementation guidance, debugging, code review, testing, documentation, and deployment preparation. All generated suggestions were reviewed, tested, modified where necessary, and understood before being included.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## Time Spent
 
-## Support
+## Time Spent
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+**Approximate total: 26 hours**
 
-## Stay in touch
+| Area | Hours |
+| --- | ---: |
+| Planning and database design | 4 hours |
+| Backend and API | 6 hours |
+| Authentication | 4 hours |
+| CMS features | 6 hours |
+| Testing and debugging | 3 hours |
+| Deployment and documentation | 3 hours |
+| **Total** | **26 hours** |
+## Technical Decisions
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- **Separate frontend and backend repositories:** keeps deployment configuration, dependencies, and release lifecycles independent.
+- **Prisma migrations:** provides a reviewable, repeatable history for local and production database changes.
+- **Railway PostgreSQL:** keeps the deployed relational database close to the Railway-hosted API.
+- **Supabase Storage for media:** keeps binary files out of PostgreSQL while the database retains public URLs and metadata.
+- **Short-lived access tokens and refresh sessions:** limits access-token lifetime while supporting persistent authenticated sessions and logout invalidation.
+- **Environment-based configuration:** keeps database credentials, JWT secrets, administrator seed data, CORS origin, and storage credentials outside source control.
+- **Generated Prisma Client excluded from Git:** `postinstall` reproduces the client from the committed Prisma schema during installation.
 
-## License
+## Known Limitations
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- Automated unit and end-to-end coverage is currently limited to basic application smoke tests; the individual CMS modules do not yet have comprehensive automated coverage.
+- The API depends on external PostgreSQL and Supabase services being configured and available for database and media operations.
+- The CMS supports a single administrator-oriented authentication model rather than multiple roles and granular permissions.
+
+## Production Links
+
+- Backend API: <https://wood-cms-backend-production.up.railway.app/api/v1>
+- Swagger documentation: <https://wood-cms-backend-production.up.railway.app/api/docs>
+- Frontend website: <https://wood-cms-frontend.vercel.app>
+
+Reviewer credentials are provided separately and are not committed publicly.
